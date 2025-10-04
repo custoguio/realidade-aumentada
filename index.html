@@ -1,39 +1,93 @@
-<script>
-  // Ativa a câmera do celular como fundo
-  const video = document.getElementById('cameraFeed');
-  navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false })
-    .then(function (stream) {
-      video.srcObject = stream;
-    })
-    .catch(function (err) {
-      console.error("Erro ao acessar a câmera: ", err);
-    });
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Quadro flutuante com toque</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+    <style>
+      body, html {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background: black;
+      }
 
-  // Espera a cena carregar
-  document.querySelector('a-scene').addEventListener('loaded', function () {
-    const quadro = document.getElementById('quadro');
-    const camera = document.querySelector('[camera]');
+      video#cameraFeed {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        object-fit: cover;
+        z-index: -1;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Vídeo da câmera no fundo -->
+    <video id="cameraFeed" autoplay muted playsinline></video>
 
-    document.querySelector('a-scene').addEventListener('click', function () {
-      // Pega a posição e direção da câmera
-      const cameraEl = camera.object3D;
-      const cameraPosition = new THREE.Vector3();
-      const cameraDirection = new THREE.Vector3();
+    <!-- Cena A-Frame sobreposta -->
+    <a-scene embedded>
+      <a-entity camera look-controls></a-entity>
 
-      cameraEl.getWorldPosition(cameraPosition);
-      cameraEl.getWorldDirection(cameraDirection);
+      <!-- Quadro 3D oculto até clicar -->
+      <a-entity id="quadro" visible="false">
+        <a-box 
+          position="0 0 0" 
+          depth="0.05" 
+          height="1" 
+          width="1.5" 
+          color="#8B4513">
+        </a-box>
+        <a-plane 
+          position="0 0 0.028" 
+          width="1.4" 
+          height="0.9" 
+          src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Mona_Lisa.jpg/440px-Mona_Lisa.jpg">
+        </a-plane>
+      </a-entity>
+    </a-scene>
 
-      // Calcula nova posição: 2 metros à frente
-      const quadroPosition = cameraPosition.clone().add(cameraDirection.multiplyScalar(2));
+    <script>
+      // Ativa a câmera do celular como fundo
+      const video = document.getElementById('cameraFeed');
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false })
+        .then(function (stream) {
+          video.srcObject = stream;
+        })
+        .catch(function (err) {
+          console.error("Erro ao acessar a câmera: ", err);
+        });
 
-      // Aplica a posição ao quadro
-      quadro.setAttribute('position', {
-        x: quadroPosition.x,
-        y: quadroPosition.y,
-        z: quadroPosition.z
+      // Espera a cena carregar
+      document.querySelector('a-scene').addEventListener('loaded', function () {
+        const quadro = document.getElementById('quadro');
+        const camera = document.querySelector('[camera]');
+
+        document.querySelector('a-scene').addEventListener('click', function () {
+          // Pega a posição e direção da câmera
+          const cameraEl = camera.object3D;
+          const cameraPosition = new THREE.Vector3();
+          const cameraDirection = new THREE.Vector3();
+
+          cameraEl.getWorldPosition(cameraPosition);
+          cameraEl.getWorldDirection(cameraDirection);
+
+          // Calcula nova posição: 2 metros à frente
+          const quadroPosition = cameraPosition.clone().add(cameraDirection.multiplyScalar(2));
+
+          // Aplica a posição ao quadro
+          quadro.setAttribute('position', {
+            x: quadroPosition.x,
+            y: quadroPosition.y,
+            z: quadroPosition.z
+          });
+
+          quadro.setAttribute('visible', true);
+        });
       });
-
-      quadro.setAttribute('visible', true);
-    });
-  });
-</script>
+    </script>
+  </body>
+</html>
