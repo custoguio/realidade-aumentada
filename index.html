@@ -1,31 +1,37 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Quadro 3D Simples (sem marcador)</title>
+    <title>Quadro flutuante com toque</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <style>
+      body, html {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background: black;
+      }
+
+      video#cameraFeed {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        object-fit: cover;
+        z-index: -1;
+      }
+    </style>
   </head>
-  <body style="margin: 0; overflow: hidden;">
-    <a-scene embedded vr-mode-ui="enabled: false" 
-             device-orientation-permission-ui="enabled: true" 
-             renderer="antialias: true">
-      
-      <!-- Câmera + cursor de toque -->
-      <a-entity camera look-controls wasd-controls>
-        <a-cursor></a-cursor>
-      </a-entity>
+  <body>
+    <!-- Vídeo da câmera no fundo -->
+    <video id="cameraFeed" autoplay muted playsinline></video>
 
-      <!-- Plano invisível para detectar toque -->
-      <a-plane id="touch-surface"
-               position="0 0 -4"
-               rotation="0 0 0"
-               width="10"
-               height="10"
-               color="#000"
-               opacity="0"
-               class="clickable">
-      </a-plane>
+    <!-- Cena A-Frame sobreposta -->
+    <a-scene embedded>
+      <a-entity camera look-controls></a-entity>
 
-      <!-- Container do quadro (inicialmente oculto) -->
+      <!-- Quadro 3D oculto até clicar -->
       <a-entity id="quadro" visible="false">
         <a-box 
           position="0 0 0" 
@@ -41,21 +47,25 @@
           src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Mona_Lisa.jpg/440px-Mona_Lisa.jpg">
         </a-plane>
       </a-entity>
-
     </a-scene>
 
     <script>
-      // Quando o plano invisível for clicado
-      document.querySelector('#touch-surface').addEventListener('click', function (evt) {
-        const quadro = document.querySelector('#quadro');
-        
-        // Obtém a posição do clique
-        const intersection = evt.detail.intersection;
-        if (intersection) {
-          const pos = intersection.point;
-          quadro.setAttribute('position', pos);
-          quadro.setAttribute('visible', true);
-        }
+      // Ativa a câmera do celular como fundo
+      const video = document.getElementById('cameraFeed');
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false })
+        .then(function (stream) {
+          video.srcObject = stream;
+        })
+        .catch(function (err) {
+          console.error("Erro ao acessar a câmera: ", err);
+        });
+
+      // Posiciona o quadro 3D ao tocar na tela
+      document.querySelector('a-scene').addEventListener('click', function () {
+        const quadro = document.getElementById('quadro');
+        // Mostra e posiciona o quadro a 2 metros na frente da câmera
+        quadro.setAttribute('visible', true);
+        quadro.setAttribute('position', '0 0 -2');
       });
     </script>
   </body>
